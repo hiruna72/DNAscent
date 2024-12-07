@@ -32,7 +32,7 @@
 "DNAscent is under active development by the Boemo Group, Department of Pathology, University of Cambridge (https://www.boemogroup.org/).\n"
 "Please submit bug reports to GitHub Issues (https://github.com/MBoemo/DNAscent/issues).";
 
- struct Arguments {
+ struct Arguments_index {
 	std::string sigfilesPath;
 	std::string seqssumPath;
 	std::string outfile;
@@ -40,7 +40,7 @@
 };
 
 
-Arguments parseIndexArguments( int argc, char** argv ){
+Arguments_index parseIndexArguments_index( int argc, char** argv ){
 
  	if( argc < 2 ){
  		std::cout << "Exiting with error.  Insufficient arguments passed to DNAscent index." << std::endl << help << std::endl;
@@ -54,7 +54,7 @@ Arguments parseIndexArguments( int argc, char** argv ){
  		std::cout << "Exiting with error.  Insufficient arguments passed to DNAscent index." << std::endl;
 		exit(EXIT_FAILURE);
 	}
- 	Arguments args;
+ 	Arguments_index args;
 	args.outfile = "index.dnascent";
 
  	/*parse the command line arguments */
@@ -93,7 +93,7 @@ Arguments parseIndexArguments( int argc, char** argv ){
 }
 
 
-std::map<std::string,std::string> parseSequencingSummary(Arguments &args){
+std::map<std::string,std::string> parseSequencingSummary(Arguments_index &args){
 
 	std::map<std::string,std::string> readID2fast5;
 	std::map<std::string,std::vector<std::string>> fast52readID;
@@ -243,7 +243,7 @@ bool isFileNameInPaths(const std::string& path, const std::string& fileNameToChe
 
 int index_main( int argc, char** argv ){
 
- 	Arguments args = parseIndexArguments( argc, argv );
+ 	Arguments_index args = parseIndexArguments_index( argc, argv );
 
 	int totalSignalFiles = 0;
 	countSignalFiles(args.sigfilesPath.c_str(), totalSignalFiles);

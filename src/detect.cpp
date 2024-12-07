@@ -22,14 +22,16 @@
 #include "alignment.h"
 #include "pod5.h"
 #include "fast5.h"
+#include "slow5_support.h"
 #include "probability.h"
 #include "../fast5/include/fast5.hpp"
 #include "../tensorflow/include/tensorflow/c/eager/c_api.h"
-#include "../pod5-file-format/c++/pod5_format/c_api.h"
+#include "../pod5-file-format_v0.3.12/include/pod5_format/c_api.h"
 #include "htsInterface.h"
 #include "error_handling.h"
 #include "config.h"
 #include <omp.h>
+#include <slow5/slow5.h>
 
 
 static const char *help=
@@ -49,7 +51,7 @@ static const char *help=
 "DNAscent is under active development by the Boemo Group, Department of Pathology, University of Cambridge (https://www.boemogroup.org/).\n"
 "Please submit bug reports to GitHub Issues (https://github.com/MBoemo/DNAscent/issues).";
 
-struct Arguments {
+struct Arguments_detect {
 	std::string bamFilename;
 	std::string referenceFilename;
 	std::string outputFilename;
@@ -63,7 +65,7 @@ struct Arguments {
 	unsigned int threads = 1;
 };
 
-Arguments parseDetectArguments( int argc, char** argv ){
+Arguments_detect parseDetectArguments_detect( int argc, char** argv ){
 
 	if( argc < 2 ){
 
@@ -82,8 +84,7 @@ Arguments parseDetectArguments( int argc, char** argv ){
 		exit(EXIT_FAILURE);
 	}
 
-	Arguments args;
-
+	Arguments_detect args;
 	/*parse the command line arguments */
 
 	for ( int i = 1; i < argc; ){
@@ -705,14 +706,58 @@ void runCNN(DNAscent::read &r, std::shared_ptr<ModelSession> session, std::vecto
 	}
 }
 
+int checkSuffix(const std::string& filename) {
+    if (filename.size() >= 10 && filename.compare(filename.size() - 10, 10, ".blow5.idx") == 0) {
+        return 1;
+    } else if (filename.size() >= 10 && filename.compare(filename.size() - 10, 10, ".slow5.idx") == 0) {
+        return 1;
+    } else {
+        return 0;
+    }
+}
 
 int detect_main( int argc, char** argv ){
 
-	Arguments args = parseDetectArguments( argc, argv );
+	Arguments_detect args = parseDetectArguments_detect( argc, argv );
 
+    std::cerr << "humanReadable: " << std::boolalpha << args.humanReadable << "\n";
+    std::cerr << "useGPU: " << args.useGPU << "\n";
+    std::cerr << "useHMM: " << args.useHMM << "\n";
+    std::cerr << "GPUdevice: " << args.GPUdevice << "\n";
+    std::cerr << "minQ: " << args.minQ << "\n";
+    std::cerr << "minL: " << args.minL << "\n";
+    std::cerr << "threads: " << args.threads << "\n";
+	
+	int flag_slow5 = checkSuffix(args.indexFilename);
+	slow5_file_t *sp = NULL;
+	
 	//load DNAscent index
 	std::map< std::string, IndexEntry > readID2path;
-	parseIndex( args.indexFilename, readID2path );
+	if(flag_slow5==0){
+		pod5_init();
+		parseIndex( args.indexFilename, readID2path );
+	}else{
+		slow5_print_version();
+
+		std::string slow5_file_path = args.indexFilename.substr(0, args.indexFilename.size() - 4);
+		//open the SLOW5 file
+		sp = slow5_open(slow5_file_path.c_str(),"r");
+		if(sp==NULL){
+			fprintf(stderr,"Error in opening file\n");
+			exit(EXIT_FAILURE);
+		}
+
+		int ret=0; //for return value
+
+		//load the SLOW5 index (will be built if not present)
+		ret = slow5_idx_load(sp);
+		if(ret<0){
+			fprintf(stderr,"Error in loading index\n");
+			exit(EXIT_FAILURE);
+		}
+
+
+	}
 
 	//get the neural network model path
 	std::string pathExe = getExePath();
@@ -778,8 +823,6 @@ int detect_main( int argc, char** argv ){
 	bam_hdr_destroy(bam_hdr_cr);
 	hts_close(bam_fh_cr);
 
-	pod5_init();
-
 	int failedEvents = 0;
 	unsigned int maxBufferSize;
 	std::vector< bam1_t * > buffer;
@@ -816,8 +859,7 @@ int detect_main( int argc, char** argv ){
 
 			#pragma omp parallel for schedule(dynamic) shared(buffer,Pore_Substrate_Config,args,prog,failed,session,inputOps,writer) num_threads(args.threads)
 			for (unsigned int i = 0; i < buffer.size(); i++){
-
-				DNAscent::read r(buffer[i], bam_hdr, readID2path, reference);
+				DNAscent::read r(buffer[i], bam_hdr, readID2path, reference,flag_slow5);
 
 				const char *ext = get_ext(r.filename.c_str());
 
@@ -826,8 +868,11 @@ int detect_main( int argc, char** argv ){
 				}
 				else if (strcmp(ext,"fast5") == 0){
 					fast5_getSignal(r);
+				} 
+				else if(flag_slow5 == 1){
+					slow5_getSignal(r,sp);
 				}
-
+				// fprintf(stderr,"%s,%f,%f,%f\n",r.readID.c_str(),r.raw[0],r.raw[1],r.raw[2]);
 				//for HMM
 				//bool useFitPoreModel = true;
 				//normaliseEvents(r, useFitPoreModel);
@@ -874,6 +919,12 @@ int detect_main( int argc, char** argv ){
 	hts_close(bam_fh);
 	writer -> close();
 	std::cout << std::endl;
-	pod5_terminate();
+
+	if(flag_slow5==0){
+		pod5_terminate();
+	}else{
+		slow5_idx_unload(sp);
+		slow5_close(sp);
+	}
 	return 0;
 }

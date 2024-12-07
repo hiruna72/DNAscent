@@ -19,7 +19,7 @@
 #include "event_handling.h"
 #include "probability.h"
 #include "../fast5/include/fast5.hpp"
-#include "../pod5-file-format/c++/pod5_format/c_api.h"
+#include "../pod5-file-format_v0.3.12/include/pod5_format/c_api.h"
 #include "detect.h"
 #include "alignment.h"
 #include "htsInterface.h"
@@ -53,7 +53,7 @@ static const char *help=
 "DNAscent is under active development by the Boemo Group, Department of Pathology, University of Cambridge (https://www.boemogroup.org/).\n"
 "Please submit bug reports to GitHub Issues (https://github.com/MBoemo/DNAscent/issues).";
 
-struct Arguments {
+struct Arguments_trainCNN {
 	std::string bamFilename;
 	std::string referenceFilename;
 	std::string outputFilename;
@@ -67,7 +67,7 @@ struct Arguments {
 	unsigned int threads;
 };
 
-Arguments parseDataArguments( int argc, char** argv ){
+Arguments_trainCNN parseDataArguments_trainCNN( int argc, char** argv ){
 
 	if( argc < 2 ){
 
@@ -86,7 +86,7 @@ Arguments parseDataArguments( int argc, char** argv ){
 		exit(EXIT_FAILURE);
 	}
 
-	Arguments args;
+	Arguments_trainCNN args;
 
 	/*defaults - we'll override these if the option was specified by the user */
 	args.threads = 1;
@@ -195,7 +195,7 @@ Arguments parseDataArguments( int argc, char** argv ){
 
 int data_main( int argc, char** argv ){
 
-	Arguments args = parseDataArguments( argc, argv );
+	Arguments_trainCNN args = parseDataArguments_trainCNN( argc, argv );
 
 	//load DNAscent index
 	std::map< std::string, IndexEntry > readID2path;

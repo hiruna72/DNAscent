@@ -2,9 +2,11 @@ CC = gcc
 CXX = g++
 DEBUG = -g
 LIBFLAGS = -lrt 
-LDFLAGS ?= -ldl -llzma -lbz2 -lm -lz
-CXXFLAGS = -Wall -O2 -fopenmp -std=c++14
+LDFLAGS ?= -ldl -llzma -lbz2 -lm
+CXXFLAGS = -Wall -O2 -fopenmp -std=c++14 -fuse-ld=gold
 CFLAGS = -Wall -std=c99 -O2
+# CXXFLAGS = -Wall -O0 -fopenmp -std=c++14 -fuse-ld=gold -g
+# CFLAGS = -Wall -std=c99 -O0 -g
 
 SPACE:= ;
 SPACE+=;
@@ -36,13 +38,30 @@ TENS_INCLUDE = -I./tensorflow/include
 FAST5_INCLUDE = -I./fast5/include
 
 #pod5
-POD5_DEPEND = pod5-file-format/build/Release/lib/libpod5_format.a
-POD5_INCLUDE = -I./pod5-file-format/build/c++
-POD5_LIB = -L${PATH_SPACEFIX}pod5-file-format/build/Release/lib -lpod5_format 
-POD5_LIB += -L${PATH_SPACEFIX}pod5-file-format/build/third_party/libs -larrow -ljemalloc_pic -lzstd
+# POD5_DEPEND = pod5-file-format/build/Release/lib/libpod5_format.a
+# POD5_INCLUDE = -I./pod5-file-format/build/c++
+# POD5_LIB = -L${PATH_SPACEFIX}pod5-file-format/build/Release/lib -lpod5_format 
+# POD5_LIB += -L${PATH_SPACEFIX}pod5-file-format/build/third_party/libs -larrow -ljemalloc_pic -lzstd
+# POD5_DEPEND = pod5-file-format_v0.3.12/lib/libpod5_format.a
+
+POD5_INCLUDE = -I./pod5-file-format_v0.3.12/include
+POD5_LIB = ${PATH_SPACEFIX}pod5-file-format_v0.3.12/lib64/libpod5_format.a
+POD5_LIB += ${PATH_SPACEFIX}pod5-file-format_v0.3.12/lib64/libarrow.a
+POD5_LIB += ${PATH_SPACEFIX}pod5-file-format_v0.3.12/lib64/libjemalloc_pic.a
+# POD5_LIB = ${PATH_SPACEFIX}pod5-file-format_v0.3.12/lib/libpod5_format.so
+
+# Boost Libraries
+BOOST_INCLUDE = -I./boost_1_86_0
+BOOST_LIB = ./boost_1_86_0/stage/lib/libboost_random.a
+
+SLOW5_LIB_DIR = ${PATH_SPACEFIX}/slow5lib-1.3.0
+SLOW5_INCLUDE = -I./slow5lib-1.3.0/include
+SLOW5_LIB = $(SLOW5_LIB_DIR)/lib/libslow5.a
+
+Z_LIB= ./zlib-1.2.13/lib/lib/libz.so
 
 #add include flags for each library
-CPPFLAGS += $(H5_INCLUDE) $(HTS_INCLUDE) $(FAST5_INCLUDE) $(TENS_INCLUDE) $(POD5_INCLUDE)
+CPPFLAGS += $(H5_INCLUDE) $(HTS_INCLUDE) $(FAST5_INCLUDE) $(TENS_INCLUDE) $(POD5_INCLUDE) $(BOOST_INCLUDE) $(SLOW5_INCLUDE)
 
 DNASCENT_EXECUTABLE = bin/DNAscent
 
@@ -71,21 +90,24 @@ tensorflow/include/tensorflow/c/c_api.h:
 		tar -xzf libtensorflow-gpu-linux-x86_64-2.4.1.tar.gz || exit 255; \
 		cd ..; \
 	fi
-	
-pod5-file-format/build/Release/lib/libpod5_format.a:
-	if [ ! -e pod5-file-format/build/Release/lib/libpod5_format.a ]; then \
-		pip3 install "conan<2" build; \
-		conan --version; \
-		cd pod5-file-format; \
-		git submodule update --init --recursive; \
-		pip3 install setuptools_scm==7.1.0; \
-		python3 -m setuptools_scm; \
-		python3 -m pod5_make_version; \
-		mkdir build; \
-		cd build; \
-		conan install --build=missing -s build_type=Release .. && cmake -DENABLE_CONAN=ON -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake .. && make -j; \
-		cd ../..; \
-	fi
+
+$(SLOW5_LIB):
+	$(MAKE) -C $(SLOW5_LIB_DIR) zstd=$(zstd) no_simd=$(no_simd) zstd_local=$(zstd_local) -j
+
+# pod5-file-format/build/Release/lib/libpod5_format.a:
+# 	if [ ! -e pod5-file-format/build/Release/lib/libpod5_format.a ]; then \
+# 		pip3 install "conan<2" build; \
+# 		conan --version; \
+# 		cd pod5-file-format; \
+# 		git submodule update --init --recursive; \
+# 		pip3 install setuptools_scm==7.1.0; \
+# 		python3 -m setuptools_scm; \
+# 		python3 -m pod5_make_version; \
+# 		mkdir build; \
+# 		cd build; \
+# 		conan install --build=missing -s build_type=Release .. && cmake -DENABLE_CONAN=ON -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake .. && make -j; \
+# 		cd ../..; \
+# 	fi
 	
 SUBDIRS = src src/scrappie src/pfasta src/sgsmooth
 CPP_SRC := $(foreach dir, $(SUBDIRS), $(wildcard $(dir)/*.cpp))
@@ -108,7 +130,7 @@ DNASCENT_OBJ = $(DNA_EXE_SRC:..cpp=.0)
 
 depend: .depend
 
-.depend: $(CPP_SRC) $(C_SRC) $(H5_LIB) $(TENS_DEPEND) $(POD5_DEPEND) src/gitcommit.h src/softwarepath.h
+.depend: $(CPP_SRC) $(C_SRC) $(H5_LIB) $(TENS_DEPEND) src/gitcommit.h src/softwarepath.h
 	rm -f ./.depend
 	$(CXX) $(CXXFLAGS) $(CPPFLAGS) -MM $(CPP_SRC) $(C_SRC) > ./.depend;
 
@@ -123,8 +145,8 @@ src/main/DNAscent.o: src/gitcommit.h src/softwarepath.h
 	$(CXX) -o $@ -c $(CXXFLAGS) $(CPPFLAGS) -fPIC $<
 
 #compile the main executables
-$(DNASCENT_EXECUTABLE): src/main/DNAscent.o $(CPP_OBJ) $(C_OBJ) $(HTS_LIB) $(H5_LIB) $(TENS_DEPEND) $(POD5_DEPEND) src/gitcommit.h src/softwarepath.h
-	$(CXX) -o $@ $(CXXFLAGS) $(CPPFLAGS) -fPIC $(DNASCENT_OBJ) $(CPP_OBJ) $(C_OBJ) $(HTS_LIB) $(H5_LIB) $(TENS_LIB) $(POD5_LIB) $(LIBFLAGS) $(LDFLAGS)
+$(DNASCENT_EXECUTABLE): src/main/DNAscent.o $(CPP_OBJ) $(C_OBJ) $(HTS_LIB) $(H5_LIB) $(TENS_DEPEND) $(POD5_LIB) $(SLOW5_LIB) $(BOOST_LIB) $(Z_LIB) src/gitcommit.h src/softwarepath.h
+	$(CXX) -o $@ $(CXXFLAGS) $(CPPFLAGS) -fPIC $(DNASCENT_OBJ) $(CPP_OBJ) $(C_OBJ) $(HTS_LIB) $(H5_LIB) $(TENS_LIB) $(POD5_LIB) $(SLOW5_LIB) $(BOOST_LIB) $(LIBFLAGS) $(LDFLAGS) $(Z_LIB)
 
 clean:
 	rm -f $(DNASCENT_EXECUTABLE) $(CPP_OBJ) $(C_OBJ) src/main/DNAscent.o src/gitcommit.h

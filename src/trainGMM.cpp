@@ -36,7 +36,7 @@ static const char *help=
 "DNAscent is under active development by the Boemo Group, Department of Pathology, University of Cambridge (https://www.boemogroup.org/).\n"
 "Please submit bug reports to GitHub Issues (https://github.com/MBoemo/DNAscent/issues).";
 
-struct Arguments {
+struct Arguments_trainGMM {
 
 	std::string trainingOutputFilename;
 	bool logFile;
@@ -50,7 +50,7 @@ struct Arguments {
 
 };
 
-Arguments parseTrainingArguments( int argc, char** argv ){
+Arguments_trainGMM parseTrainingArguments_trainGMM( int argc, char** argv ){
 
 	if( argc < 2 ){
 
@@ -64,7 +64,7 @@ Arguments parseTrainingArguments( int argc, char** argv ){
 		exit(EXIT_SUCCESS);
 	}
 
-	Arguments trainArgs;
+	Arguments_trainGMM trainArgs;
 
 	//defaults - we'll override these if the option was specified by the user
 	trainArgs.threads = 1;
@@ -375,7 +375,7 @@ void printAllKLength(char set[], int k,int n, std::vector<std::string> &out){
 
 int train_main( int argc, char** argv ){
 
-	Arguments trainArgs = parseTrainingArguments( argc, argv );
+	Arguments_trainGMM trainArgs = parseTrainingArguments_trainGMM( argc, argv );
 
 	/*open output file */
 	std::ofstream outFile( trainArgs.trainingOutputFilename );

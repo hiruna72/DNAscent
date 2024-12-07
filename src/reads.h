@@ -206,7 +206,7 @@ namespace DNAscent {
 		size_t pod5_row;
 		
 		public:
-			read(bam1_t *record, bam_hdr_t *bam_hdr, std::map<std::string, IndexEntry> &readID2path, std::map<std::string, std::string> &reference){
+			read(bam1_t *record, bam_hdr_t *bam_hdr, std::map<std::string, IndexEntry> &readID2path, std::map<std::string, std::string> &reference, int flag_slow5=0){
 				
 				this -> record = record;
 				
@@ -259,10 +259,12 @@ namespace DNAscent {
 				referenceMappedTo = mappedTo;
 															
 				//unpack index
-				IndexEntry ie = readID2path[readID_fetch];
-				filename = ie.filepath;
-				pod5_batch = ie.batchIndex;
-				pod5_row = ie.rowIndex;
+				if(flag_slow5 == 0){
+					IndexEntry ie = readID2path[readID_fetch];
+					filename = ie.filepath;
+					pod5_batch = ie.batchIndex;
+					pod5_row = ie.rowIndex;
+				}
 
 				//get the subsequence of the reference this read mapped to
 				referenceSeqMappedTo = reference.at(referenceMappedTo).substr(refStart, refEnd - refStart);

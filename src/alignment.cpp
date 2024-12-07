@@ -18,7 +18,7 @@
 #include "common.h"
 #include "event_handling.h"
 #include "../fast5/include/fast5.hpp"
-#include "../pod5-file-format/c++/pod5_format/c_api.h"
+#include "../pod5-file-format_v0.3.12/include/pod5_format/c_api.h"
 #include "alignment.h"
 #include "error_handling.h"
 #include "probability.h"
@@ -45,7 +45,7 @@ static const char *help=
 "DNAscent is under active development by the Boemo Group, Department of Pathology, University of Cambridge (https://www.boemogroup.org/).\n"
 "Please submit bug reports to GitHub Issues (https://github.com/MBoemo/DNAscent/issues).";
 
-struct Arguments {
+struct Arguments_alignment {
 	std::string bamFilename;
 	std::string referenceFilename;
 	std::string outputFilename;
@@ -56,7 +56,7 @@ struct Arguments {
 	unsigned int threads;
 };
 
-Arguments parseAlignArguments( int argc, char** argv ){
+Arguments_alignment parseAlignArguments_alignment( int argc, char** argv ){
 
 	if( argc < 2 ){
 
@@ -75,7 +75,7 @@ Arguments parseAlignArguments( int argc, char** argv ){
 		exit(EXIT_FAILURE);
 	}
 
-	Arguments args;
+	Arguments_alignment args;
 
 	/*defaults - we'll override these if the option was specified by the user */
 	args.threads = 1;
@@ -746,7 +746,7 @@ void eventalign( DNAscent::read &r, unsigned int totalWindowLength){
 
 int align_main( int argc, char** argv ){
 
-	Arguments args = parseAlignArguments( argc, argv );
+	Arguments_alignment args = parseAlignArguments_alignment( argc, argv );
 
 	//load DNAscent index
 	std::map< std::string, IndexEntry > readID2path;

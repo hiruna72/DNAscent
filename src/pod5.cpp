@@ -9,7 +9,7 @@
 
 
 #include "pod5.h"
-#include "../pod5-file-format/c++/pod5_format/c_api.h"
+#include "../pod5-file-format_v0.3.12/include/pod5_format/c_api.h"
 #include "error_handling.h"
 #include <vector>
 #include <string>
