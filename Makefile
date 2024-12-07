@@ -38,27 +38,20 @@ TENS_INCLUDE = -I./tensorflow/include
 FAST5_INCLUDE = -I./fast5/include
 
 #pod5
-# POD5_DEPEND = pod5-file-format/build/Release/lib/libpod5_format.a
-# POD5_INCLUDE = -I./pod5-file-format/build/c++
-# POD5_LIB = -L${PATH_SPACEFIX}pod5-file-format/build/Release/lib -lpod5_format 
-# POD5_LIB += -L${PATH_SPACEFIX}pod5-file-format/build/third_party/libs -larrow -ljemalloc_pic -lzstd
-# POD5_DEPEND = pod5-file-format_v0.3.12/lib/libpod5_format.a
-
-POD5_INCLUDE = -I./pod5-file-format_v0.3.12/include
-POD5_LIB = ${PATH_SPACEFIX}pod5-file-format_v0.3.12/lib64/libpod5_format.a
-POD5_LIB += ${PATH_SPACEFIX}pod5-file-format_v0.3.12/lib64/libarrow.a
-POD5_LIB += ${PATH_SPACEFIX}pod5-file-format_v0.3.12/lib64/libjemalloc_pic.a
-# POD5_LIB = ${PATH_SPACEFIX}pod5-file-format_v0.3.12/lib/libpod5_format.so
+POD5_INCLUDE = -I./pod5-file-format/include
+POD5_LIB = ${PATH_SPACEFIX}pod5-file-format/lib64/libpod5_format.a
+POD5_LIB += ${PATH_SPACEFIX}pod5-file-format/lib64/libarrow.a
+POD5_LIB += ${PATH_SPACEFIX}pod5-file-format/lib64/libjemalloc_pic.a
 
 # Boost Libraries
-BOOST_INCLUDE = -I./boost_1_86_0
-BOOST_LIB = ./boost_1_86_0/stage/lib/libboost_random.a
+BOOST_INCLUDE = -I./boost
+BOOST_LIB = ./boost/stage/lib/libboost_random.a
 
-SLOW5_LIB_DIR = ${PATH_SPACEFIX}/slow5lib-1.3.0
-SLOW5_INCLUDE = -I./slow5lib-1.3.0/include
+SLOW5_LIB_DIR = ${PATH_SPACEFIX}/slow5lib
+SLOW5_INCLUDE = -I./slow5lib/include
 SLOW5_LIB = $(SLOW5_LIB_DIR)/lib/libslow5.a
 
-Z_LIB= ./zlib-1.2.13/lib/lib/libz.so
+Z_LIB= ./zlib/lib/libz.so
 
 #add include flags for each library
 CPPFLAGS += $(H5_INCLUDE) $(HTS_INCLUDE) $(FAST5_INCLUDE) $(TENS_INCLUDE) $(POD5_INCLUDE) $(BOOST_INCLUDE) $(SLOW5_INCLUDE)
