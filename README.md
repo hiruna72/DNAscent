@@ -17,7 +17,7 @@ singularity pull DNAscent.sif library://mboemo/dnascent/dnascent:4.0.3
 ## Building from Source
 Clone the DNAscent repository with the recursive flag so that the dependencies are cloned as well.
 ```shell
-git clone --recursive https://github.com/MBoemo/DNAscent.git
+git clone --recursive https://github.com/hiruna72/DNAscent.git
 ./install-packages.sh
 ```
 The DNAscent directory will appear in your current directory.  Switch to the latest tagged version and compile the software by running:
