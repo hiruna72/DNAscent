@@ -3,8 +3,8 @@ CXX = g++
 DEBUG = -g
 LIBFLAGS = -lrt 
 LDFLAGS ?= -ldl -llzma -lbz2 -lm
-CXXFLAGS = -Wall -O2 -fopenmp -std=c++14 -fuse-ld=gold
-CFLAGS = -Wall -std=c99 -O2
+CXXFLAGS = -Wall -O3 -fopenmp -std=c++14 -fuse-ld=gold
+CFLAGS = -Wall -std=c99 -O3
 # CXXFLAGS = -Wall -O0 -fopenmp -std=c++14 -fuse-ld=gold -g
 # CFLAGS = -Wall -std=c99 -O0 -g
 

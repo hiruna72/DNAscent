@@ -270,7 +270,15 @@ std::pair< double, std::vector< std::string > > builtinViterbi( std::vector <dou
 		level_mu = meanStd.first;
 		level_sigma = meanStd.second;
 
-		matchProb = eln( normalPDF( level_mu, level_sigma, (observations[t] - scalings.shift)/scalings.scale ) );
+
+		try {
+			matchProb = eln( normalPDF( level_mu, level_sigma, (observations[t] - scalings.shift)/scalings.scale ) );
+		} catch (const std::exception& e) {
+			// Optional: Log or handle the exception here
+			// std::cerr << "funcB caught: " << e.what() << ", rethrowing..." << std::endl;
+			throw; // Rethrow the exception to be handled by funcC
+		}
+
 		//matchProb = eln( cauchyPDF( level_mu, level_sigma, (observations[t] - scalings.shift)/scalings.scale ) );
 		insProb = 0.0; //log(1) = 0; set probability equal to 1 and use transition probability as weighting
 
@@ -649,7 +657,14 @@ void eventalign( DNAscent::read &r, unsigned int totalWindowLength){
 		if ( r.isReverse ) reference_coord = r.refEnd - reference_index - k/2;
 		else reference_coord = r.refStart + reference_index + k/2;
 		
-		std::pair< double, std::vector<std::string> > builtinAlignment = builtinViterbi( eventSnippet_means, readSnippet, r.scalings, false);
+		std::pair< double, std::vector<std::string> > builtinAlignment;
+		try {
+			builtinAlignment = builtinViterbi( eventSnippet_means, readSnippet, r.scalings, false);
+		} catch (const std::exception& e) {
+			// Optional: Log or handle the exception here
+			// std::cerr << "funcC caught: " << e.what() << ", rethrowing..." << std::endl;
+			throw; // Rethrow the exception to be handled by funcC
+		}
 
 		std::vector< std::string > stateLabels = builtinAlignment.second;
 		size_t lastM_ev = 0;

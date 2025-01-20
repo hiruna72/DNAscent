@@ -37,3 +37,4 @@ src/softwarepath.h
 
 #images
 *.sif
+.vscode

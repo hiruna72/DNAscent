@@ -857,6 +857,10 @@ int detect_main( int argc, char** argv ){
 		//if we've filled up the buffer with reads, compute them in parallel
 		if (buffer.size() >= maxBufferSize or (buffer.size() > 0 and result == -1 ) ){
 
+			for(unsigned int i = 0; i < buffer.size(); i++){
+				fprintf(stderr, "%s\n", bam_get_qname(buffer[i]));
+			}
+
 			#pragma omp parallel for schedule(dynamic) shared(buffer,Pore_Substrate_Config,args,prog,failed,session,inputOps,writer) num_threads(args.threads)
 			for (unsigned int i = 0; i < buffer.size(); i++){
 				DNAscent::read r(buffer[i], bam_hdr, readID2path, reference,flag_slow5);
@@ -891,7 +895,12 @@ int detect_main( int argc, char** argv ){
 				//HMMdetection hmm_likelihood = llAcrossRead(r, 12);
 				//readOut = hmm_likelihood.stdout;
 				
-				eventalign( r, Pore_Substrate_Config.windowLength_align);
+				try {
+					eventalign( r, Pore_Substrate_Config.windowLength_align);
+				} catch (const std::exception& e) {
+					std::cerr << r.readID << ": " << e.what() << std::endl;
+					r.QCpassed = false;
+				}
 
 				if (not r.QCpassed){
 					failed++;
@@ -902,17 +911,18 @@ int detect_main( int argc, char** argv ){
 				runCNN(r,session,inputOps,args.humanReadable);
 
 				prog++;
-				pb.displayProgress( prog, failed, failedEvents );
+				// pb.displayProgress( prog, failed, failedEvents );
 				
 				#pragma omp critical
 				{
 					writer -> write(r);
-					pb.displayProgress( prog, failed, failedEvents );
+					// pb.displayProgress( prog, failed, failedEvents );
 				}
 			}
 			buffer.clear();
+			fprintf(stderr, "*\n");
+			pb.displayProgress( prog, failed, failedEvents );
 		}
-		pb.displayProgress( prog, failed, failedEvents );
 	}
 	bam_destroy1(itr_record);
 	bam_hdr_destroy(bam_hdr);
