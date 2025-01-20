@@ -17,6 +17,12 @@ hdf5-1.8.14/
 tensorflow/
 hdf5-1.8.14.tar.gz
 htslib/
+slow5lib/
+zlib/
+boost/
+cuda*/
+cudnn*/
+pod5-file-format/*/
 
 #generated
 .depend
@@ -38,3 +44,6 @@ src/softwarepath.h
 #images
 *.sif
 .vscode
+
+test_data/big/
+test_data/small/

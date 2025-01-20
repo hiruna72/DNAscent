@@ -26,7 +26,7 @@
 #include "probability.h"
 #include "../fast5/include/fast5.hpp"
 #include "../tensorflow/include/tensorflow/c/eager/c_api.h"
-#include "../pod5-file-format_v0.3.12/include/pod5_format/c_api.h"
+#include "../pod5-file-format/include/pod5_format/c_api.h"
 #include "htsInterface.h"
 #include "error_handling.h"
 #include "config.h"

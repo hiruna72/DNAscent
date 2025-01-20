@@ -18,7 +18,7 @@
 #include "common.h"
 #include "event_handling.h"
 #include "../fast5/include/fast5.hpp"
-#include "../pod5-file-format_v0.3.12/include/pod5_format/c_api.h"
+#include "../pod5-file-format/include/pod5_format/c_api.h"
 #include "alignment.h"
 #include "error_handling.h"
 #include "probability.h"
